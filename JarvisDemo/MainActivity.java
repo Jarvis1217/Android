@@ -1,8 +1,11 @@
 package com.example.jarvis;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.widget.Button;
@@ -19,6 +22,7 @@ import com.baidu.speech.EventManagerFactory;
 import com.baidu.speech.asr.SpeechConstant;
 
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,6 +34,9 @@ public class MainActivity extends AppCompatActivity implements EventListener {
     protected String command;
     private EventManager asr;
 
+    /**
+     * 主要执行过程
+     * */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,7 +49,9 @@ public class MainActivity extends AppCompatActivity implements EventListener {
         asr.registerListener(this);
     }
 
-    // 动态申请权限
+    /**
+     * 动态申请权限
+     * */
     private void initPermission() {
         String[] permissions = {Manifest.permission.RECORD_AUDIO,
                 Manifest.permission.ACCESS_NETWORK_STATE,
@@ -64,14 +73,21 @@ public class MainActivity extends AppCompatActivity implements EventListener {
 
     }
 
+    /**
+     * 组件视图初始化
+     * */
     private void initView() {
         txtResult = findViewById(R.id.resText);
         btnStart = findViewById(R.id.btnStart);
         btnEnd = findViewById(R.id.btnEnd);
 
         btnStart.setOnClickListener(v -> {
-            Toast.makeText(MainActivity.this, "请说出命令词!", Toast.LENGTH_SHORT).show();
-            asr.send(SpeechConstant.ASR_START, null, null, 0, 0);
+            if(isNetworkAvailable(getApplicationContext())) {
+                Toast.makeText(MainActivity.this, "请说出命令词!", Toast.LENGTH_SHORT).show();
+                asr.send(SpeechConstant.ASR_START, null, null, 0, 0);
+            } else {
+                Toast.makeText(MainActivity.this, "咦? 你的网络似乎不可用哦!", Toast.LENGTH_SHORT).show();
+            }
         });
 
         btnEnd.setOnClickListener(v -> {
@@ -80,6 +96,9 @@ public class MainActivity extends AppCompatActivity implements EventListener {
         });
     }
 
+    /**
+     * 语音识别过程处理
+     * */
     @Override
     public void onEvent(String name, String params, byte[] data, int offset, int length) {
 
@@ -102,6 +121,9 @@ public class MainActivity extends AppCompatActivity implements EventListener {
         }
     }
 
+    /**
+     * 语音识别结束，销毁进程
+     * */
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -109,12 +131,38 @@ public class MainActivity extends AppCompatActivity implements EventListener {
         asr.unregisterListener(this);
     }
 
+    /**
+     * 工具方法: 判断设备是否有可用网络连接
+     * */
+    public static boolean isNetworkAvailable(Context context) {
+        ConnectivityManager connectivity = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivity != null) {
+            NetworkInfo info = connectivity.getActiveNetworkInfo();
+            if (info != null && info.isConnected()) {       // 当前网络是连接的
+                return info.getState() == NetworkInfo.State.CONNECTED;      // 当前所连接的网络是否可用
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 开始匹配命令词，执行对应操作
+     * 功能列表: {
+     *     1.拨打指定号码
+     *     2.查看微博热搜
+     *     3.查询天气
+     *     4.音乐列表
+     *     5.电影列表
+     *     6.摇色子
+     * }
+     * */
     public void commandMatch(String command) {
         String phoneCallPattern = ".*[电话呼叫拨号].*";
         String newsPattern = ".*[微博新闻].*";
         String weatherPattern = ".*天气.*";
         String musicPattern = ".*[音乐歌].*";
         String moviePattern = ".*电影.*";
+        String dicePattern = ".*色子.*";
 
         // 拨号
         boolean phoneBillMatch = Pattern.matches(phoneCallPattern, command);
@@ -156,23 +204,14 @@ public class MainActivity extends AppCompatActivity implements EventListener {
             intent.setAction(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("https://www.douyu.com/directory/subCate/yqk/290"));
             startActivity(intent);
-        } else {
+        }
+
+        // 摇色子
+        boolean diceMatch = Pattern.matches(dicePattern, command);
+        if(diceMatch)
+            Toast.makeText(MainActivity.this, "Ok,结果是:"+(new Random().nextInt(6)+1), Toast.LENGTH_SHORT).show();
+        else {
             Toast.makeText(MainActivity.this, "指令不存在!", Toast.LENGTH_SHORT).show();
         }
     }
-
-    // 判断运营商信息
-//    private static String getSimOperator(Context context) {
-//        String num = "";
-//        TelephonyManager teleManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-//        String opeNum = teleManager.getSimOperator();
-//        if ("46001".equals(opeNum) || "46006".equals(opeNum) || "46009".equals(opeNum)) {
-//            num = "10010"; //联通
-//        } else if ("46000".equals(opeNum) || "46002".equals(opeNum) || "46004".equals(opeNum) || "46007".equals(opeNum)) {
-//            num = "10086"; //移动
-//        } else if ("46003".equals(opeNum) || "46005".equals(opeNum) || "46011".equals(opeNum)) {
-//            num = "10000"; //电信
-//        }
-//        return num;
-//    }
 }
