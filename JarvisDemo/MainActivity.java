@@ -20,7 +20,9 @@ import com.baidu.speech.EventListener;
 import com.baidu.speech.EventManager;
 import com.baidu.speech.EventManagerFactory;
 import com.baidu.speech.asr.SpeechConstant;
+import com.eclipsesource.v8.V8;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -53,7 +55,8 @@ public class MainActivity extends AppCompatActivity implements EventListener {
      * 动态申请权限
      * */
     private void initPermission() {
-        String[] permissions = {Manifest.permission.RECORD_AUDIO,
+        String[] permissions = {
+                Manifest.permission.RECORD_AUDIO,
                 Manifest.permission.ACCESS_NETWORK_STATE,
                 Manifest.permission.INTERNET,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
@@ -152,20 +155,29 @@ public class MainActivity extends AppCompatActivity implements EventListener {
      *     2.查看微博热搜
      *     3.查询天气
      *     4.音乐列表
-     *     5.电影列表
+     *     5.看电视
      *     6.摇色子
+     *     7.语音计算
      * }
      * */
     public void commandMatch(String command) {
-        String phoneCallPattern = ".*[电话呼叫拨号].*";
+        String phoneCallPattern = ".*[话呼叫拨号].*";
         String newsPattern = ".*[微博新闻].*";
         String weatherPattern = ".*天气.*";
         String musicPattern = ".*[音乐歌].*";
-        String moviePattern = ".*电影.*";
+        String tvPattern = ".*电视.*";
         String dicePattern = ".*色子.*";
+        String calcPattern = ".*计算.*";
+
+        boolean phoneBillMatch = Pattern.matches(phoneCallPattern, command);
+        boolean newsMatch = Pattern.matches(newsPattern, command);
+        boolean weatherMatch = Pattern.matches(weatherPattern, command);
+        boolean musicMatch = Pattern.matches(musicPattern, command);
+        boolean tvMatch = Pattern.matches(tvPattern, command);
+        boolean diceMatch = Pattern.matches(dicePattern, command);
+        boolean calcMatch = Pattern.matches(calcPattern, command);
 
         // 拨号
-        boolean phoneBillMatch = Pattern.matches(phoneCallPattern, command);
         if (phoneBillMatch) {
             Intent intent = new Intent();
             intent.setAction(Intent.ACTION_DIAL);
@@ -174,42 +186,58 @@ public class MainActivity extends AppCompatActivity implements EventListener {
             startActivity(intent);
         }
         // 微博新闻
-        boolean newsMatch = Pattern.matches(newsPattern, command);
-        if (newsMatch) {
+        else if (newsMatch) {
             Intent intent = new Intent();
             intent.setAction(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("https://s.weibo.com/top/summary?Refer=top_hot&topnav=1&wvr=6"));
             startActivity(intent);
         }
         // 天气查询
-        boolean weatherMatch = Pattern.matches(weatherPattern, command);
-        if (weatherMatch) {
+        else if (weatherMatch) {
             Intent intent = new Intent();
             intent.setAction(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("http://www.nmc.cn/"));
             startActivity(intent);
         }
         // 音乐
-        boolean musicMatch = Pattern.matches(musicPattern, command);
-        if (musicMatch) {
+        else if (musicMatch) {
             Intent intent = new Intent();
             intent.setAction(Intent.ACTION_VIEW);
             intent.setData(Uri.parse("https://y.qq.com/?ADTAG=myqq#type=index"));
             startActivity(intent);
         }
-        // 电影
-        boolean movieMatch = Pattern.matches(moviePattern, command);
-        if (movieMatch) {
+        // 电视
+        else if (tvMatch) {
             Intent intent = new Intent();
             intent.setAction(Intent.ACTION_VIEW);
-            intent.setData(Uri.parse("https://www.douyu.com/directory/subCate/yqk/290"));
+            intent.setData(Uri.parse("https://tv.cctv.com/live/index.shtml?spm=C96370.PPDB2vhvSivD.Eqs52HVQ2WJL.1"));
             startActivity(intent);
         }
 
         // 摇色子
-        boolean diceMatch = Pattern.matches(dicePattern, command);
-        if(diceMatch)
-            Toast.makeText(MainActivity.this, "Ok,结果是:"+(new Random().nextInt(6)+1), Toast.LENGTH_SHORT).show();
+        else if(diceMatch) {
+            Toast.makeText(MainActivity.this, "Ok,结果是:" + (new Random().nextInt(6) + 1), Toast.LENGTH_SHORT).show();
+        }
+
+        // 计算
+        else if(calcMatch) {
+            String text = command.replace("计算","");
+            text = text.replaceAll("×", "*").replaceAll("÷","/");
+            text = text.replaceAll("点",".");
+
+            text = text.replaceAll("一","1").replaceAll("二","2");
+            text = text.replaceAll("三","3").replaceAll("四","4");
+            text = text.replaceAll("五","5").replaceAll("六","6");
+            text = text.replaceAll("七","7").replaceAll("八","8");
+            text = text.replaceAll("九","9").replaceAll("零","0");
+
+            V8 runtime = V8.createV8Runtime();
+            double result = runtime.executeDoubleScript("eval("+ text +")");
+            result = new BigDecimal(result).setScale(4, BigDecimal.ROUND_HALF_UP).doubleValue();
+
+            txtResult.setText(String.format("%s=%s", text, result));
+        }
+
         else {
             Toast.makeText(MainActivity.this, "指令不存在!", Toast.LENGTH_SHORT).show();
         }
