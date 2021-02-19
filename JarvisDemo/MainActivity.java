@@ -158,6 +158,7 @@ public class MainActivity extends AppCompatActivity implements EventListener {
      *     5.看电视
      *     6.摇色子
      *     7.语音计算
+     *     8.网页搜索
      * }
      * */
     public void commandMatch(String command) {
@@ -168,6 +169,7 @@ public class MainActivity extends AppCompatActivity implements EventListener {
         String tvPattern = ".*电视.*";
         String dicePattern = ".*色子.*";
         String calcPattern = ".*计算.*";
+        String searchPattern = ".*搜索.*";
 
         boolean phoneBillMatch = Pattern.matches(phoneCallPattern, command);
         boolean newsMatch = Pattern.matches(newsPattern, command);
@@ -176,6 +178,7 @@ public class MainActivity extends AppCompatActivity implements EventListener {
         boolean tvMatch = Pattern.matches(tvPattern, command);
         boolean diceMatch = Pattern.matches(dicePattern, command);
         boolean calcMatch = Pattern.matches(calcPattern, command);
+        boolean searchMatch = Pattern.matches(searchPattern, command);
 
         // 拨号
         if (phoneBillMatch) {
@@ -185,6 +188,17 @@ public class MainActivity extends AppCompatActivity implements EventListener {
             intent.setData(Uri.parse("tel:" + phoneNumber));
             startActivity(intent);
         }
+
+        //搜索
+        else if(searchMatch) {
+            String param = command.replace("搜索","");
+
+            Intent intent = new Intent();
+            intent.setAction(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse("https://cn.bing.com/search?q="+param));
+            startActivity(intent);
+        }
+
         // 微博新闻
         else if (newsMatch) {
             Intent intent = new Intent();
@@ -192,6 +206,7 @@ public class MainActivity extends AppCompatActivity implements EventListener {
             intent.setData(Uri.parse("https://s.weibo.com/top/summary?Refer=top_hot&topnav=1&wvr=6"));
             startActivity(intent);
         }
+
         // 天气查询
         else if (weatherMatch) {
             Intent intent = new Intent();
@@ -199,6 +214,7 @@ public class MainActivity extends AppCompatActivity implements EventListener {
             intent.setData(Uri.parse("http://www.nmc.cn/"));
             startActivity(intent);
         }
+
         // 音乐
         else if (musicMatch) {
             Intent intent = new Intent();
@@ -206,6 +222,7 @@ public class MainActivity extends AppCompatActivity implements EventListener {
             intent.setData(Uri.parse("https://y.qq.com/?ADTAG=myqq#type=index"));
             startActivity(intent);
         }
+
         // 电视
         else if (tvMatch) {
             Intent intent = new Intent();
