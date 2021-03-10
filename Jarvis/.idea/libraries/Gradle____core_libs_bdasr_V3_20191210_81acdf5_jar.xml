@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Gradle: ./core/libs/bdasr_V3_20191210_81acdf5.jar">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/core/libs/bdasr_V3_20191210_81acdf5.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
